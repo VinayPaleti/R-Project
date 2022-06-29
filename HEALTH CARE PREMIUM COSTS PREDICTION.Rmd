@@ -1,0 +1,173 @@
+---
+title: "HEALTH CARE PREMIUM COSTS PREDICTION"
+author: "Vinay"
+date: '2022-06-23'
+output: 
+  word_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Abstract
+
+Insurance involve the policy that ensure there is a decrease or elimination of the loss costs incurred as a result of several risks. There are a number of factors that always influence the insurance costs. With machine learning algorithms, the process of implementing the insurance policies are more efficient and reliable. Therefore, this paper main focus is to develop a linear regression model that will help in the predictions of the insurance costs and the factors that need to be put into consideration when taking an insurance cover contract. The project will include the use of a dataset downloaded from the Kaggle.com website. The project answers the research question of, whether there is any relationship between the health insurance costs and age. The results of the project illustrate a strong positive correlation between the insurance costs and age.
+
+## Introduction
+
+With the increase in uncertainities and threats, there is a high exposure of households, companies, people, and properties to different forms of risks. The risk levels always vary and they might be health, death, loss of assets, or property. However, the wellbeing and life of people are the greatest parts and essential. However, they cannot be avoided and this is where the finance industry comes in and has developed a number of products that can be used in protecting organizations and individuals to such risks through capital reimbursement. Therefore, insurance involves the use of a policy that removes or decreases the costs of losses that are incurred when risks occur. The insurance companies need to be sufficiently precises in the case of quantifying and measuring the cost that the policy has covered and the expenses that needs to be paid for this insurance. There are several variables that are used to estimate this, and in case of any omission it affect the overall policy. Therefore, there needs to have accurate process in the policy of insurance. This has been a challenge to many insurance companies. Therefore, this project objective is to have a linear regression model that will help with a solution for this challenge. The project is implemented in R programming language. 
+
+##  Literature Review
+
+In the study performed by Pesantez-Narvaez et al. (2019), a comparison of the performance of XGBoost and logistic regression techniques in the prediction of presence of accident claims was done. The resulst of their study illustared that logistic regression was more suitable than XGBoost technique as it had strong predicability. In another study by Stucki (2019) the author identify Random forest to be the best model, with an accuracy of 74%, in predicting the insurance policy determining factors as they tried to understand the customer churn. From the reviewed works, most of the models developed did not put into consideration both the claim severity and cost predicted. The models only make classification of issues related to claims. Therefore, this project will focus on logistic regression algorthim that will help in predicting health premium costs. 
+
+## Theory
+
+H1: Age is one of the major factor that affect the amount of Health Insurance. 
+
+## Data
+The data has been retrieved from https://www.kaggle.com/datasets/noordeen/insurance-premium-prediction/download. It includes:
+
+```{r}
+#Before performing any analysis, the project involve importing all the necessary libraries
+#install.packages("Hmisc")
+#install.packages("WVPlots")
+library(ggplot2)
+library(Hmisc)
+library(cowplot)
+library(WVPlots)
+library(e1071)
+library(caret)
+```
+```{r echo=FALSE}
+data<-read.csv("C:/Users/User/Downloads/insurance.csv")
+head(data)
+```
+Get idea about the data by using the describe()function. We see missing values, mean, lowest, and highest values. 
+```{r}
+describe(data)
+```
+
+The described data above looks tidy since there are no missing values. 
+```{r}
+sapply(data,function(x) sum(is.na(x)))
+```
+## Methodology
+
+Having the data cleaned, next will do analysis on the dataset and identify patterns in the dataset. 
+First analysis is to find the correlation between expenses, age, and bmi.
+
+```{r}
+x <- ggplot(data, aes(age, expenses)) +
+  geom_jitter(color = "blue", alpha = 0.5) +
+    theme_light()
+
+y <- ggplot(data, aes(bmi, expenses)) +
+  geom_jitter(color = "green", alpha = 0.5) +
+  theme_light()
+
+plot_1 <- plot_grid(x, y) 
+title <- ggdraw() + draw_label("Correlation between expenses and Age,BMI", fontface='bold')
+plot_grid(title, plot_1, ncol=1, rel_heights=c(0.1, 1))
+```
+
+Second analysis involve correlation between expenses and Sex,Children covered
+
+```{r}
+x <- ggplot(data, aes(sex,expenses)) +
+  geom_jitter(aes(color = sex), alpha = 0.7) +
+  theme_light()
+
+y <- ggplot(data, aes(children,expenses)) +
+  geom_jitter(aes(color = children), alpha = 0.7) +
+  theme_light()
+
+plot_2 <- plot_grid(x, y) 
+title <- ggdraw() + draw_label("Correlation between expenses and Sex,Children covered", fontface='bold')
+plot_grid(title, plot_2, ncol=1, rel_heights=c(0.1, 1))
+```
+
+Next is the correlation analysis between expenses and smokers, region.
+
+```{r}
+x <- ggplot(data, aes(smoker,expenses)) +
+  geom_jitter(aes(color = smoker), alpha = 0.7) +
+  theme_light()
+
+y <- ggplot(data, aes(region,expenses)) +
+  geom_jitter(aes(color = region), alpha = 0.7) +
+  theme_light()
+
+plot_3 <- plot_grid(x, y) 
+title <- ggdraw() + draw_label("Correlation between expenses and Smoker,Region", fontface='bold')
+plot_grid(title, plot_3, ncol=1, rel_heights=c(0.1, 1))
+```
+
+Build the linear regression model.
+First, split the dataset for modelling.
+
+```{r}
+train_spl <- round(0.8 * nrow(data))
+ind_train <- sample(1:nrow(data), train_spl)
+training <- data[ind_train, ]
+testing <- data[-ind_train, ]
+```
+```{r}
+formula_1 <- as.formula("expenses ~ age + bmi + children + smoker + region")
+
+model_lr <- lm(formula_1, data =training)
+```
+```{r}
+pred <- predict(model_lr, newdata =testing)
+
+residuals_1 <- testing$expenses - pred
+rmse <- sqrt(mean(residuals_1^2))
+```
+
+## Results
+
+The analysis in the project identified various observations. It is clear that there is a strong positive correlation between age, bmi and expenses. This is because from the scatter plot, increase in values for age and bmi also led to the increase in the values for insurance expenses. 
+
+
+```{r echo=FALSE}
+plot_grid(title, plot_1, ncol=1, rel_heights=c(0.1, 1))
+```
+
+It is also clear that there is no significant relationship between sex and charges. In addition, the insurance expenses smokers are higher than that of the non-smokers. 
+
+```{r echo=FALSE}
+plot_grid(title, plot_3, ncol=1, rel_heights=c(0.1, 1))
+```
+```{r echo=FALSE}
+plot_grid(title, plot_2, ncol=1, rel_heights=c(0.1, 1))
+```
+
+The summary of the logistic regression model depict that smoking has a huge impact on the insurance charges. 
+
+```{r echo=FALSE}
+summary(model_lr)
+```
+The model has an RMSE of 6025.65. 
+```{r}
+print(paste0("RMSE for the model: ", round(rmse, 2)))
+```
+## Implications
+
+For further analysis, there needs to have an inclusion of more features as this will ensure that there is comparatively more accurate results. 
+
+
+## Conclusion
+
+The project analysis and prediction has figured out the main features that are crucial in health insurance. Smoking has been identified as one of the major feature that greatly affect the insurance expenses. The study has also developed a prediction model that will be useful to the insurance companies and their potential customers.
+
+
+## References
+
+Pesantez-Narvaez, J., Guillen, M., & Alcañiz, M. (2019). Predicting motor insurance claims using telematics data—XGBoost versus logistic regression. Risks, 7(2), 70.
+
+Stucki, O. (2019). Predicting the customer churn with machine
+learning methods: case: private insurance customer data
+
+ 
